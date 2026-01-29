@@ -479,12 +479,16 @@ async def create_quote(quote: QuoteCreate, current_user: dict = Depends(get_curr
     return response
 
 @api_router.get("/quotes", response_model=List[QuoteResponse])
-async def get_quotes(city_id: Optional[str] = None, status: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+async def get_quotes(city_id: Optional[str] = None, status: Optional[str] = None, include_converted: bool = False, current_user: dict = Depends(get_current_user)):
     query = {}
     if city_id:
         query["city_id"] = city_id
     if status:
         query["status"] = status
+    elif not include_converted:
+        # By default, exclude converted quotes from the list
+        query["status"] = {"$ne": "converted"}
+    
     quotes = await db.quotes.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
     customers = {c["id"]: c for c in await db.customers.find({}, {"_id": 0}).to_list(1000)}
