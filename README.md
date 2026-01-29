@@ -10,7 +10,8 @@ A comprehensive CRM system for Christmas lights and event decoration installatio
 - 📄 **Quotes & Invoices** - Generate PDFs, send via email
 - 💳 **Payment Processing** - Stripe + manual cash/check tracking
 - 👷 **Crew Management** - Manage installation crews and scheduling
-- 📍 **GPS Tracking** - Real-time crew location tracking
+- 📍 **GPS Tracking** - Real-time crew location tracking with interactive map
+- 🗺️ **Map View** - See crews and today's job locations on a live map
 - 🏙️ **Multi-City Support** - Segregate data by location
 - 📱 **Crew Portal** - Mobile-friendly view for field crews
 
