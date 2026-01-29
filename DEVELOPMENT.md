@@ -119,6 +119,8 @@
 | **date-fns** | Latest | Date utilities |
 | **Phosphor Icons** | Latest | Icon library |
 | **Framer Motion** | Latest | Animations |
+| **Leaflet** | 1.9+ | Interactive maps |
+| **React-Leaflet** | 4.x | React wrapper for Leaflet |
 
 ### Database
 
