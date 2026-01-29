@@ -1061,6 +1061,7 @@ docker push YOUR_AWS_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/festive-frontend:la
 - `POST /api/crew-portal/check-out/{id}` - Crew check-out with GPS
 - `POST /api/crew-portal/update-location` - Update crew location
 - `GET /api/tracking/crew-locations` - Get all crew locations
+- `GET /api/tracking/todays-schedule` - Get today's scheduled jobs for map
 
 ### Crew Portal
 - `GET /api/crew-portal/my-schedule` - Get crew's schedule
