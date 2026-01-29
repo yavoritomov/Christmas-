@@ -75,3 +75,26 @@ Build a CRM for small business dealing with installation and sales of Christmas 
 - Report generation (monthly, yearly)
 - Crew availability management
 - GPS tracking for crews
+
+## GPS Tracking Feature (Added 2026-01-29)
+Browser-based GPS tracking for installation crews:
+
+### Features Implemented:
+- **Check-In**: Crew captures GPS when arriving at job site
+- **Check-Out**: Crew captures GPS when completing job
+- **Live Tracking**: Optional continuous location updates
+- **Admin Tracking View**: Real-time dashboard showing all crew locations
+- **Status indicators**: On Site (green), Available (gray)
+
+### API Endpoints Added:
+- POST /api/crew-portal/check-in/{installation_id} - Check in with GPS
+- POST /api/crew-portal/check-out/{installation_id} - Check out with GPS  
+- POST /api/crew-portal/update-location - Live location updates
+- GET /api/tracking/crew-locations - Admin view of all crew locations
+
+### Database Collections Added:
+- crew_locations (stores real-time crew GPS data)
+
+### Installation Fields Added:
+- check_in_time, check_in_location
+- check_out_time, check_out_location
