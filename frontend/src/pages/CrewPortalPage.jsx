@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { API, useAuth } from '../App';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Snowflake, SignOut, CalendarBlank, Clock, MapPin, Phone, User, Check, Play } from '@phosphor-icons/react';
+import { Snowflake, SignOut, CalendarBlank, Clock, MapPin, Phone, Check, Play, NavigationArrow, Warning, Spinner } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -13,36 +13,137 @@ export default function CrewPortalPage() {
   const navigate = useNavigate();
   const [installations, setInstallations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState({});
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [trackingEnabled, setTrackingEnabled] = useState(false);
 
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        const response = await axios.get(`${API}/crew-portal/my-schedule`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setInstallations(response.data);
-      } catch (error) {
-        toast.error('Failed to load schedule');
-      } finally {
-        setLoading(false);
+  // Get current GPS location
+  const getCurrentLocation = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by your browser'));
+        return;
       }
-    };
-    fetchSchedule();
-  }, [token]);
 
-  const handleStatusUpdate = async (id, status) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const loc = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          };
+          setCurrentLocation(loc);
+          setLocationError(null);
+          resolve(loc);
+        },
+        (error) => {
+          let message = 'Unable to get location';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              message = 'Location permission denied. Please enable location access.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message = 'Location information unavailable';
+              break;
+            case error.TIMEOUT:
+              message = 'Location request timed out';
+              break;
+            default:
+              message = 'Unknown location error';
+          }
+          setLocationError(message);
+          reject(new Error(message));
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    });
+  }, []);
+
+  // Request location permission on mount
+  useEffect(() => {
+    getCurrentLocation().catch(console.error);
+  }, [getCurrentLocation]);
+
+  // Live location tracking (optional)
+  useEffect(() => {
+    if (!trackingEnabled || !token) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      async (position) => {
+        const loc = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        };
+        setCurrentLocation(loc);
+        
+        // Send location update to server
+        try {
+          await axios.post(`${API}/crew-portal/update-location`, loc, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (error) {
+          console.error('Failed to update location:', error);
+        }
+      },
+      (error) => console.error('Watch position error:', error),
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 10000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [trackingEnabled, token]);
+
+  const fetchSchedule = useCallback(async () => {
     try {
-      await axios.put(`${API}/installations/${id}/status?status=${status}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success(`Job ${status === 'completed' ? 'completed' : 'started'}`);
-      // Refresh
       const response = await axios.get(`${API}/crew-portal/my-schedule`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setInstallations(response.data);
     } catch (error) {
-      toast.error('Failed to update status');
+      toast.error('Failed to load schedule');
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchSchedule();
+  }, [fetchSchedule]);
+
+  const handleCheckIn = async (installationId) => {
+    setLocationLoading(prev => ({ ...prev, [installationId]: 'checkin' }));
+    try {
+      const location = await getCurrentLocation();
+      await axios.post(`${API}/crew-portal/check-in/${installationId}`, location, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Checked in successfully!');
+      fetchSchedule();
+    } catch (error) {
+      toast.error(error.message || 'Failed to check in');
+    } finally {
+      setLocationLoading(prev => ({ ...prev, [installationId]: null }));
+    }
+  };
+
+  const handleCheckOut = async (installationId) => {
+    setLocationLoading(prev => ({ ...prev, [installationId]: 'checkout' }));
+    try {
+      const location = await getCurrentLocation();
+      await axios.post(`${API}/crew-portal/check-out/${installationId}`, location, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Job completed! Great work!');
+      fetchSchedule();
+    } catch (error) {
+      toast.error(error.message || 'Failed to check out');
+    } finally {
+      setLocationLoading(prev => ({ ...prev, [installationId]: null }));
     }
   };
 
@@ -89,8 +190,50 @@ export default function CrewPortalPage() {
         </div>
       </header>
 
+      {/* Location Status Bar */}
+      <div className={`px-4 py-2 text-sm ${locationError ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {locationError ? (
+              <>
+                <Warning size={16} />
+                <span>{locationError}</span>
+              </>
+            ) : currentLocation ? (
+              <>
+                <NavigationArrow size={16} />
+                <span>GPS Active • Accuracy: {currentLocation.accuracy?.toFixed(0)}m</span>
+              </>
+            ) : (
+              <>
+                <NavigationArrow size={16} className="animate-pulse" />
+                <span>Getting location...</span>
+              </>
+            )}
+          </div>
+          {locationError && (
+            <Button variant="ghost" size="sm" onClick={() => getCurrentLocation().catch(() => {})}>
+              Retry
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Live Tracking Toggle */}
+      <div className="max-w-2xl mx-auto px-4 py-3">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={trackingEnabled}
+            onChange={(e) => setTrackingEnabled(e.target.checked)}
+            className="w-5 h-5 rounded text-primary"
+          />
+          <span className="text-sm text-slate-600">Enable live location tracking</span>
+        </label>
+      </div>
+
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-4">
         <div className="mb-6">
           <h2 className="text-2xl font-heading font-bold text-slate-900">My Schedule</h2>
           <p className="text-slate-500">{installations.length} upcoming jobs</p>
@@ -149,6 +292,15 @@ export default function CrewPortalPage() {
                           </p>
                         </div>
 
+                        {/* Check-in/Check-out timestamps */}
+                        {job.check_in_time && (
+                          <div className="mb-4 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                            <p className="text-xs text-emerald-600 font-medium">
+                              Checked in: {format(new Date(job.check_in_time), 'h:mm a')}
+                            </p>
+                          </div>
+                        )}
+
                         {job.notes && (
                           <div className="mb-4 p-3 bg-white/50 rounded-lg">
                             <p className="text-xs text-slate-500 mb-1">Notes</p>
@@ -172,18 +324,38 @@ export default function CrewPortalPage() {
                         <div className="flex gap-2">
                           {job.status === 'scheduled' && (
                             <Button 
-                              onClick={() => handleStatusUpdate(job.id, 'in_progress')}
-                              className="flex-1 gap-2 bg-amber-500 hover:bg-amber-600"
+                              onClick={() => handleCheckIn(job.id)}
+                              disabled={locationLoading[job.id] === 'checkin' || !!locationError}
+                              className="flex-1 gap-2 bg-emerald-500 hover:bg-emerald-600"
+                              data-testid={`checkin-${job.id}`}
                             >
-                              <Play size={18} /> Start Job
+                              {locationLoading[job.id] === 'checkin' ? (
+                                <>
+                                  <span className="animate-spin">⏳</span> Getting Location...
+                                </>
+                              ) : (
+                                <>
+                                  <NavigationArrow size={18} /> Check In
+                                </>
+                              )}
                             </Button>
                           )}
                           {job.status === 'in_progress' && (
                             <Button 
-                              onClick={() => handleStatusUpdate(job.id, 'completed')}
-                              className="flex-1 gap-2 bg-emerald-500 hover:bg-emerald-600"
+                              onClick={() => handleCheckOut(job.id)}
+                              disabled={locationLoading[job.id] === 'checkout' || !!locationError}
+                              className="flex-1 gap-2 bg-primary hover:bg-primary/90"
+                              data-testid={`checkout-${job.id}`}
                             >
-                              <Check size={18} /> Mark Complete
+                              {locationLoading[job.id] === 'checkout' ? (
+                                <>
+                                  <span className="animate-spin">⏳</span> Getting Location...
+                                </>
+                              ) : (
+                                <>
+                                  <Check size={18} /> Check Out & Complete
+                                </>
+                              )}
                             </Button>
                           )}
                           <Button 
