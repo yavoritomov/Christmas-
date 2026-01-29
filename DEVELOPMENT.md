@@ -501,6 +501,57 @@ toast.error('Something went wrong');
 toast.info('Information message');
 ```
 
+### Leaflet Map Integration
+
+```jsx
+// Import Leaflet components
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix default marker icons (required)
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom marker icon with HTML/SVG
+const createCustomIcon = (color) => {
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50%;"></div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+  });
+};
+
+// Map component
+<MapContainer center={[39.7392, -104.9903]} zoom={11} style={{ height: '500px' }}>
+  <TileLayer
+    attribution='&copy; OpenStreetMap'
+    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  />
+  <Marker position={[lat, lng]} icon={createCustomIcon('#22c55e')}>
+    <Popup>
+      <div>Popup content</div>
+    </Popup>
+  </Marker>
+</MapContainer>
+
+// Auto-fit bounds to markers
+const FitBounds = ({ positions }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (positions.length > 0) {
+      map.fitBounds(L.latLngBounds(positions), { padding: [50, 50] });
+    }
+  }, [positions, map]);
+  return null;
+};
+```
+
 ---
 
 ## Database Schema
