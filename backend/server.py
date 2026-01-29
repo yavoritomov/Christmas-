@@ -1156,6 +1156,45 @@ async def get_all_crew_locations(city_id: Optional[str] = None, current_user: di
     
     return result
 
+@api_router.get("/tracking/todays-schedule")
+async def get_todays_schedule_locations(city_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get today's scheduled installations with addresses for map display"""
+    if current_user["role"] not in ["admin", "staff"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    query = {"scheduled_date": today}
+    if city_id:
+        query["city_id"] = city_id
+    
+    installations = await db.installations.find(query, {"_id": 0}).to_list(100)
+    
+    customers = {c["id"]: c for c in await db.customers.find({}, {"_id": 0}).to_list(1000)}
+    crews = {c["id"]: c for c in await db.crews.find({}, {"_id": 0}).to_list(100)}
+    
+    result = []
+    for inst in installations:
+        customer = customers.get(inst.get("customer_id"))
+        assigned_crews = [{"id": c, "name": crews[c]["name"], "color": crews[c]["color"]} 
+                         for c in inst.get("crew_ids", []) if c in crews]
+        
+        result.append({
+            "id": inst["id"],
+            "customer_name": customer["name"] if customer else "Unknown",
+            "customer_phone": customer["phone"] if customer else None,
+            "address": inst["address"],
+            "scheduled_time": inst.get("scheduled_time"),
+            "estimated_hours": inst.get("estimated_hours", 2),
+            "status": inst["status"],
+            "installation_type": inst["installation_type"],
+            "crews": assigned_crews,
+            "check_in_location": inst.get("check_in_location"),
+            "notes": inst.get("notes")
+        })
+    
+    return result
+
 # ============== PDF GENERATION ==============
 def generate_quote_pdf(quote: dict, customer: dict, company_name: str = "Festive Lights & Decorations"):
     buffer = BytesIO()
