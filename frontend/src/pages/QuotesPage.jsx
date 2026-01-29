@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
-import { Plus, MagnifyingGlass, DotsThree, Eye, FilePdf, PaperPlaneTilt, Trash, WhatsappLogo } from '@phosphor-icons/react';
+import { Plus, MagnifyingGlass, DotsThree, Eye, FilePdf, PaperPlaneTilt, Trash, WhatsappLogo, Receipt, ArrowRight } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export default function QuotesPage() {
@@ -17,6 +17,7 @@ export default function QuotesPage() {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [converting, setConverting] = useState(null);
 
   const fetchQuotes = async () => {
     try {
@@ -40,6 +41,22 @@ export default function QuotesPage() {
       fetchQuotes();
     } catch (error) {
       toast.error('Failed to delete quote');
+    }
+  };
+
+  const handleConvertToInvoice = async (id, quoteNumber) => {
+    if (!window.confirm(`Convert ${quoteNumber} to an invoice? The quote will be archived.`)) return;
+    setConverting(id);
+    try {
+      const response = await axios.post(`${API}/quotes/${id}/convert-to-invoice`, {}, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      toast.success(`Quote converted to Invoice ${response.data.invoice_number}`);
+      // Navigate to the new invoice
+      navigate(`/invoices/${response.data.id}`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to convert quote');
+      setConverting(null);
     }
   };
 
@@ -125,7 +142,7 @@ export default function QuotesPage() {
                   <TableHead className="hidden md:table-cell">Date</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="w-12"></TableHead>
+                  <TableHead className="w-32"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -141,28 +158,50 @@ export default function QuotesPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm"><DotsThree size={20} /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
-                            <Eye size={16} className="mr-2" /> View
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDownloadPdf(quote.id, quote.quote_number)}>
-                            <FilePdf size={16} className="mr-2" /> Download PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleSendEmail(quote.id)}>
-                            <PaperPlaneTilt size={16} className="mr-2" /> Send Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleSendWhatsApp(quote.id)}>
-                            <WhatsappLogo size={16} className="mr-2" /> WhatsApp
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(quote.id)} className="text-destructive">
-                            <Trash size={16} className="mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 text-xs"
+                          onClick={() => handleConvertToInvoice(quote.id, quote.quote_number)}
+                          disabled={converting === quote.id}
+                          data-testid={`convert-quote-${quote.id}`}
+                        >
+                          {converting === quote.id ? (
+                            'Converting...'
+                          ) : (
+                            <>
+                              <Receipt size={14} />
+                              <ArrowRight size={12} />
+                            </>
+                          )}
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm"><DotsThree size={20} /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/quotes/${quote.id}/edit`)}>
+                              <Eye size={16} className="mr-2" /> View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleConvertToInvoice(quote.id, quote.quote_number)}>
+                              <Receipt size={16} className="mr-2" /> Convert to Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadPdf(quote.id, quote.quote_number)}>
+                              <FilePdf size={16} className="mr-2" /> Download PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleSendEmail(quote.id)}>
+                              <PaperPlaneTilt size={16} className="mr-2" /> Send Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleSendWhatsApp(quote.id)}>
+                              <WhatsappLogo size={16} className="mr-2" /> WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(quote.id)} className="text-destructive">
+                              <Trash size={16} className="mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
