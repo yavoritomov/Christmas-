@@ -50,7 +50,7 @@
 │   │   │   ├── CrewsPage.jsx
 │   │   │   ├── SchedulePage.jsx
 │   │   │   ├── CrewPortalPage.jsx
-│   │   │   ├── CrewTrackingPage.jsx
+│   │   │   ├── CrewTrackingPage.jsx  # Map view with Leaflet
 │   │   │   └── SettingsPage.jsx
 │   │   └── components/
 │   │       ├── DashboardLayout.jsx  # Main layout with sidebar
