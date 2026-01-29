@@ -11,13 +11,15 @@ Build a CRM for small business dealing with installation and sales of Christmas 
 - 10-20 crews with their own login to view work orders/schedules
 - Multi-city segregation
 - Light theme UI
+- GPS tracking for crews with map visualization
 
 ## Architecture
 - **Backend:** FastAPI + MongoDB
-- **Frontend:** React + Tailwind CSS + Shadcn UI
+- **Frontend:** React + Tailwind CSS + Shadcn UI + Leaflet Maps
 - **Authentication:** JWT-based
 - **Payments:** Stripe integration (active)
 - **PDF Generation:** ReportLab
+- **Maps:** Leaflet + OpenStreetMap (free, no API key needed)
 
 ## Core Features Implemented (Date: 2026-01-29)
 1. ✅ User Authentication (admin, staff, crew roles)
@@ -31,6 +33,9 @@ Build a CRM for small business dealing with installation and sales of Christmas 
 9. ✅ Installation Scheduling with Calendar view
 10. ✅ Crew Portal (separate mobile-friendly view)
 11. ✅ Dashboard with KPIs and charts
+12. ✅ GPS Tracking with browser geolocation
+13. ✅ Interactive Map View with crew & job markers
+14. ✅ Today's Schedule visualization on map
 
 ## User Personas
 1. **Admin:** Full access to all features, manages cities, crews, settings
@@ -38,7 +43,7 @@ Build a CRM for small business dealing with installation and sales of Christmas 
 3. **Crew:** Mobile access to their assigned work orders via Crew Portal
 
 ## Database Collections
-- users, cities, customers, quotes, invoices, payments, payment_transactions, crews, installations, counters
+- users, cities, customers, quotes, invoices, payments, payment_transactions, crews, installations, crew_locations, counters
 
 ## API Endpoints
 - /api/auth/* (login, register, me)
@@ -49,7 +54,8 @@ Build a CRM for small business dealing with installation and sales of Christmas 
 - /api/payments/* (create, list, stripe)
 - /api/crews/* (CRUD)
 - /api/installations/* (CRUD, status)
-- /api/crew-portal/* (my-schedule)
+- /api/crew-portal/* (my-schedule, check-in, check-out, update-location)
+- /api/tracking/* (crew-locations, todays-schedule)
 - /api/dashboard/stats
 - /api/email/* (send quote, invoice, bulk)
 - /api/messaging/* (whatsapp, viber - mocked)
@@ -68,33 +74,18 @@ Build a CRM for small business dealing with installation and sales of Christmas 
 - WhatsApp Business API integration
 - Quote editing after creation
 - Invoice editing
+- Geocoding for customer addresses (convert address to lat/lng)
 
 ### P2 (Nice to have)
 - Customer import from CSV
 - Recurring installation scheduling
 - Report generation (monthly, yearly)
 - Crew availability management
-- GPS tracking for crews
+- Route optimization for daily jobs
 
-## GPS Tracking Feature (Added 2026-01-29)
-Browser-based GPS tracking for installation crews:
+## Technical Documentation
+- `/app/README.md` - Quick start guide
+- `/app/DEPLOYMENT.md` - Deployment instructions (Linux & AWS)
+- `/app/DEVELOPMENT.md` - Developer guide with full technical details
 
-### Features Implemented:
-- **Check-In**: Crew captures GPS when arriving at job site
-- **Check-Out**: Crew captures GPS when completing job
-- **Live Tracking**: Optional continuous location updates
-- **Admin Tracking View**: Real-time dashboard showing all crew locations
-- **Status indicators**: On Site (green), Available (gray)
-
-### API Endpoints Added:
-- POST /api/crew-portal/check-in/{installation_id} - Check in with GPS
-- POST /api/crew-portal/check-out/{installation_id} - Check out with GPS  
-- POST /api/crew-portal/update-location - Live location updates
-- GET /api/tracking/crew-locations - Admin view of all crew locations
-
-### Database Collections Added:
-- crew_locations (stores real-time crew GPS data)
-
-### Installation Fields Added:
-- check_in_time, check_in_location
-- check_out_time, check_out_location
+*Last updated: January 2026*
