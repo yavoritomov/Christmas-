@@ -1,0 +1,175 @@
+{
+  "typography": {
+    "font_family": {
+      "headings": "Outfit, sans-serif",
+      "body": "DM Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "weights": {
+      "light": 300,
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "usage": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight text-primary",
+      "h2": "text-3xl font-semibold tracking-tight text-primary",
+      "h3": "text-2xl font-semibold tracking-tight text-primary",
+      "body": "text-base font-normal leading-relaxed text-slate-600",
+      "small": "text-sm font-medium text-slate-500",
+      "label": "text-xs font-bold uppercase tracking-wider text-slate-400"
+    },
+    "imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap');"
+    ]
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#164e63",
+        "foreground": "#ffffff",
+        "description": "Deep Evergreen - Professional, Trustworthy, Winter-themed"
+      },
+      "secondary": {
+        "DEFAULT": "#0ea5e9",
+        "foreground": "#ffffff",
+        "description": "Ice Blue - Fresh, Modern, Accent"
+      },
+      "accent": {
+        "DEFAULT": "#f0f9ff",
+        "foreground": "#0c4a6e",
+        "description": "Snow White - Backgrounds, Subtle Highlights"
+      },
+      "destructive": {
+        "DEFAULT": "#ef4444",
+        "foreground": "#ffffff",
+        "description": "Berry Red - Alerts, Deletions, Urgent Actions"
+      },
+      "background": "#f8fafc",
+      "surface": "#ffffff",
+      "border": "#e2e8f0",
+      "muted": "#64748b"
+    },
+    "tailwind_config": {
+      "colors": {
+        "primary": "195 60% 24%",
+        "secondary": "199 89% 48%",
+        "accent": "204 100% 97%",
+        "background": "210 40% 98%",
+        "foreground": "215 25% 27%"
+      }
+    }
+  },
+  "visual_enhancers": {
+    "shadows": {
+      "card": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+      "floating": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "glow": "0 0 15px rgba(14, 165, 233, 0.3)"
+    },
+    "borders": {
+      "default": "1px solid #e2e8f0",
+      "active": "1px solid #0ea5e9",
+      "glass": "1px solid rgba(255, 255, 255, 0.5)"
+    },
+    "radius": {
+      "default": "0.5rem",
+      "card": "0.75rem",
+      "button": "9999px"
+    },
+    "glassmorphism": {
+      "header": "bg-white/80 backdrop-blur-md border-b border-slate-200/50",
+      "overlay": "bg-slate-900/20 backdrop-blur-sm"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-white hover:bg-primary/90 rounded-full px-6 py-2 font-medium transition-all shadow-sm hover:shadow-md active:scale-95",
+      "secondary": "bg-white text-primary border border-slate-200 hover:bg-slate-50 rounded-full px-6 py-2 font-medium transition-all",
+      "ghost": "text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-full px-4 py-2 transition-all"
+    },
+    "cards": {
+      "default": "bg-white rounded-xl border border-slate-100 shadow-card p-6 hover:shadow-floating transition-shadow duration-300",
+      "metric": "bg-white rounded-xl border border-slate-100 p-6 relative overflow-hidden group"
+    },
+    "inputs": {
+      "default": "h-10 rounded-lg border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    },
+    "status_badges": {
+      "success": "bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full text-xs font-medium",
+      "warning": "bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full text-xs font-medium",
+      "error": "bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full text-xs font-medium",
+      "neutral": "bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full text-xs font-medium"
+    }
+  },
+  "grids": {
+    "dashboard": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6",
+    "form": "grid grid-cols-1 md:grid-cols-2 gap-6",
+    "list": "flex flex-col gap-4"
+  },
+  "motion": {
+    "transitions": {
+      "default": "transition-all duration-200 ease-in-out",
+      "slow": "transition-all duration-500 ease-out"
+    },
+    "animations": {
+      "fade_in": "animate-in fade-in duration-500",
+      "slide_up": "animate-in slide-in-from-bottom-4 duration-500",
+      "scale_in": "animate-in zoom-in-95 duration-300"
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure text contrast ratio is at least 4.5:1 for normal text and 3:1 for large text.",
+    "focus": "All interactive elements must have a visible focus ring.",
+    "aria": "Use aria-labels for icon-only buttons."
+  },
+  "media": {
+    "image_urls": {
+      "hero_backgrounds": [
+        "https://images.unsplash.com/photo-1766671617424-d77a5c24de2d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwxfHxjaHJpc3RtYXMlMjBsaWdodHMlMjBpbnN0YWxsYXRpb24lMjBob3VzZXxlbnwwfHx8fDE3Njk3MTA5MTZ8MA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1733436134041-c0bed1cd888c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwzfHxjaHJpc3RtYXMlMjBsaWdodHMlMjBpbnN0YWxsYXRpb24lMjBob3VzZXxlbnwwfHx8fDE3Njk3MTA5MTZ8MA&ixlib=rb-4.1.0&q=85"
+      ],
+      "crew_avatars": [
+        "https://images.unsplash.com/photo-1764328165995-0624c280a6d2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwxfHxjb25zdHJ1Y3Rpb24lMjB3b3JrZXIlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3Njk3MTA5MTh8MA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1603516270950-26e4f5004ffd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwzfHxjb25zdHJ1Y3Rpb24lMjB3b3JrZXIlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3Njk3MTA5MTh8MA&ixlib=rb-4.1.0&q=85"
+      ],
+      "placeholders": {
+        "logo": "https://placehold.co/200x50/164e63/ffffff?text=Lumina+Lights",
+        "map": "https://placehold.co/600x400/e2e8f0/64748b?text=Map+View"
+      }
+    }
+  },
+  "3d_libraries": {
+    "usage": "Minimal. Use Framer Motion for 2D transitions. No heavy 3D required for this CRM."
+  },
+  "instructions_to_main_agent": [
+    "1. Install dependencies: `npm install @phosphor-icons/react framer-motion date-fns recharts`",
+    "2. Configure Tailwind: Update `tailwind.config.js` with the custom colors and fonts defined above.",
+    "3. Global CSS: Add the font imports to `index.css`.",
+    "4. Layout: Create a `DashboardLayout` component with a sidebar navigation and a top header.",
+    "5. Components: Customize Shadcn components (Button, Card, Input, Table) to match the 'Winter Professional' theme.",
+    "6. Pages: Implement the Dashboard, Customer List, Quote Builder, and Crew Schedule pages using the defined grids and spacing.",
+    "7. Mobile: Ensure the Crew Portal is fully responsive with large touch targets."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy",
+    "Use glass-morphism effects with backdrop filters (12-24px blur)",
+    "You MUST NOT apply universal transition. Eg: `transition: all`. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+    "You MUST NOT center align the app container, ie do not add `.App { text-align: center; }` in the css file. This disrupts the human natural reading flow of text",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN",
+    "Prioritize using pre-existing components from src/components/ui when applicable",
+    "Create new components that match the style and conventions of existing components when needed",
+    "Examine existing components to understand the project's component patterns before creating new ones",
+    "Components MUST use named exports (export const ComponentName = ...)",
+    "Pages MUST use default exports (export default function PageName() {...})",
+    "Use `sonner` for toasts. Sonner component are located in `/app/src/components/ui/sonner.tsx`"
+  ]
+}
