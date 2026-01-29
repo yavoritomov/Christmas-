@@ -1,34 +1,58 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* App.css - Additional styles */
+
+.sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 text-slate-600 rounded-lg transition-colors duration-200;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.sidebar-link:hover {
+    @apply bg-slate-100 text-slate-900;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.sidebar-link.active {
+    @apply bg-primary text-white;
 }
 
-.App-link {
-    color: #61dafb;
+.stat-card {
+    @apply bg-white rounded-xl border border-slate-100 p-6 relative overflow-hidden;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, transparent 50%, hsl(var(--accent)) 50%);
+    opacity: 0.5;
+}
+
+.table-row-hover:hover {
+    @apply bg-slate-50;
+}
+
+.btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90 rounded-full px-6 py-2 font-medium transition-colors duration-200 shadow-sm hover:shadow-md active:scale-95;
+}
+
+.btn-secondary {
+    @apply bg-white text-primary border border-slate-200 hover:bg-slate-50 rounded-full px-6 py-2 font-medium transition-colors duration-200;
+}
+
+.btn-ghost {
+    @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-full px-4 py-2 transition-colors duration-200;
+}
+
+.input-default {
+    @apply h-10 rounded-lg border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2;
+}
+
+/* Calendar styles */
+.rdp-day_selected {
+    background-color: hsl(var(--primary)) !important;
+}
+
+.rdp-day_today {
+    background-color: hsl(var(--accent)) !important;
+    color: hsl(var(--primary)) !important;
 }
