@@ -268,6 +268,29 @@ class InstallationResponse(BaseModel):
     status: str
     installation_type: str
     created_at: str
+    # GPS tracking fields
+    check_in_time: Optional[str] = None
+    check_in_location: Optional[dict] = None
+    check_out_time: Optional[str] = None
+    check_out_location: Optional[dict] = None
+
+class LocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None
+
+class CrewLocationResponse(BaseModel):
+    crew_id: str
+    crew_name: str
+    crew_color: str
+    installation_id: Optional[str] = None
+    customer_name: Optional[str] = None
+    address: Optional[str] = None
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None
+    timestamp: str
+    status: str  # checked_in, en_route, idle
 
 class EmailSendRequest(BaseModel):
     to_email: str
