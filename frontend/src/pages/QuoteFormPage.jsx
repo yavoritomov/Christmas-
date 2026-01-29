@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, Plus, Trash, FilePdf, PaperPlaneTilt } from '@phosphor-icons/react';
+import { ArrowLeft, Plus, Trash, FilePdf, PaperPlaneTilt, Receipt, ArrowRight } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export default function QuoteFormPage() {
@@ -27,6 +27,7 @@ export default function QuoteFormPage() {
     valid_until: ''
   });
   const [quote, setQuote] = useState(null);
+  const [converting, setConverting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,6 +125,24 @@ export default function QuoteFormPage() {
     }
   };
 
+  const handleConvertToInvoice = async () => {
+    if (!quote) return;
+    if (!window.confirm(`Convert ${quote.quote_number} to an invoice? The quote will be archived.`)) return;
+    setConverting(true);
+    try {
+      const response = await axios.post(`${API}/quotes/${quote.id}/convert-to-invoice`, {}, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      toast.success(`Quote converted to Invoice ${response.data.invoice_number}`);
+      navigate(`/invoices/${response.data.id}`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to convert quote');
+      setConverting(false);
+    }
+  };
+
+  const isConverted = quote?.status === 'converted';
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="quote-form-page">
       <div className="flex items-center justify-between">
@@ -137,6 +156,25 @@ export default function QuoteFormPage() {
         </div>
         {quote && (
           <div className="flex gap-2">
+            {!isConverted && (
+              <Button 
+                onClick={handleConvertToInvoice} 
+                disabled={converting}
+                className="gap-2"
+                data-testid="convert-to-invoice-btn"
+              >
+                {converting ? 'Converting...' : (
+                  <>
+                    <Receipt size={18} /> Convert to Invoice <ArrowRight size={14} />
+                  </>
+                )}
+              </Button>
+            )}
+            {isConverted && (
+              <span className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-medium">
+                Converted to Invoice
+              </span>
+            )}
             <Button variant="outline" onClick={handleDownloadPdf} className="gap-2">
               <FilePdf size={18} /> PDF
             </Button>
