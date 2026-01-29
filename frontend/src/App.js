@@ -179,6 +179,7 @@ function App() {
               <Route path="invoices/unpaid" element={<UnpaidInvoicesPage />} />
               <Route path="crews" element={<CrewsPage />} />
               <Route path="schedule" element={<SchedulePage />} />
+              <Route path="tracking" element={<CrewTrackingPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
           </Routes>
