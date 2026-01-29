@@ -14,7 +14,8 @@ import {
   X,
   CaretDown,
   Snowflake,
-  Warning
+  Warning,
+  NavigationArrow
 } from '@phosphor-icons/react';
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ const navigation = [
   { name: 'Unpaid', href: '/invoices/unpaid', icon: Warning },
   { name: 'Crews', href: '/crews', icon: UsersThree },
   { name: 'Schedule', href: '/schedule', icon: CalendarBlank },
+  { name: 'Tracking', href: '/tracking', icon: NavigationArrow },
   { name: 'Settings', href: '/settings', icon: Gear },
 ];
 
