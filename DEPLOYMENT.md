@@ -95,9 +95,15 @@ Festive Lights CRM is a comprehensive customer relationship management system de
 ### GPS Tracking (Admin)
 
 1. Go to **Tracking** page
-2. View real-time crew locations
-3. See who is "On Site" vs "Available"
-4. Click map icon to open Google Maps
+2. Toggle between **Map View** and **List View**
+3. **Map Features:**
+   - Crew markers (circles) show real-time locations
+   - Job markers (squares) show today's scheduled addresses
+   - Color-coded by status (green=on site, blue=scheduled, amber=in progress)
+   - Click markers for details and Google Maps links
+4. Toggle "Show today's job locations" to display customer addresses
+5. View today's schedule with crew assignments below the map
+6. Auto-refresh updates every 30 seconds
 
 ### Crew Portal (For Field Crews)
 
