@@ -16,6 +16,7 @@ import UnpaidInvoicesPage from './pages/UnpaidInvoicesPage';
 import CrewsPage from './pages/CrewsPage';
 import SchedulePage from './pages/SchedulePage';
 import CrewPortalPage from './pages/CrewPortalPage';
+import CrewTrackingPage from './pages/CrewTrackingPage';
 import SettingsPage from './pages/SettingsPage';
 
 // Layout
