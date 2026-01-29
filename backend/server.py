@@ -44,6 +44,11 @@ security = HTTPBearer()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Root route
+@api_router.get("/")
+async def root():
+    return {"message": "Festive Lights CRM API", "status": "running"}
+
 # ============== UTILITY FUNCTIONS ==============
 def create_token(user_id: str, email: str, role: str) -> str:
     payload = {
