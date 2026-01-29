@@ -21,11 +21,11 @@ export default function CustomerDetailPage() {
       try {
         const [customerRes, quotesRes, invoicesRes] = await Promise.all([
           axios.get(`${API}/customers/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API}/quotes`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API}/quotes/customer/${id}?include_converted=true`, { headers: { Authorization: `Bearer ${token}` } }),
           axios.get(`${API}/invoices`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
         setCustomer(customerRes.data);
-        setQuotes(quotesRes.data.filter(q => q.customer_id === id));
+        setQuotes(quotesRes.data);
         setInvoices(invoicesRes.data.filter(i => i.customer_id === id));
       } catch (error) {
         toast.error('Failed to load customer');
@@ -111,14 +111,19 @@ export default function CustomerDetailPage() {
               ) : (
                 <div className="space-y-2">
                   {quotes.map(q => (
-                    <div key={q.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div key={q.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100" onClick={() => navigate(`/quotes/${q.id}/edit`)}>
                       <div>
                         <p className="font-medium">{q.quote_number}</p>
                         <p className="text-sm text-slate-500">{q.created_at?.slice(0,10)}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">${q.total?.toFixed(2)}</p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${q.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : q.status === 'sent' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}>{q.status}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          q.status === 'converted' ? 'bg-purple-100 text-purple-700' :
+                          q.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : 
+                          q.status === 'sent' ? 'bg-blue-100 text-blue-700' : 
+                          'bg-slate-100 text-slate-700'
+                        }`}>{q.status}</span>
                       </div>
                     </div>
                   ))}
