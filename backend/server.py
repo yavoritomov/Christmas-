@@ -521,6 +521,79 @@ async def delete_quote(quote_id: str, current_user: dict = Depends(get_current_u
         raise HTTPException(status_code=404, detail="Quote not found")
     return {"message": "Quote deleted"}
 
+@api_router.post("/quotes/{quote_id}/convert-to-invoice", response_model=InvoiceResponse)
+async def convert_quote_to_invoice(quote_id: str, current_user: dict = Depends(get_current_user)):
+    """Convert a quote to an invoice and archive the quote"""
+    # Get the quote
+    quote = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    if quote.get("status") == "converted":
+        raise HTTPException(status_code=400, detail="Quote has already been converted to an invoice")
+    
+    # Create invoice from quote
+    invoice_id = str(uuid.uuid4())
+    invoice_number = await get_next_invoice_number()
+    
+    customer = await db.customers.find_one({"id": quote["customer_id"]}, {"_id": 0})
+    city = await db.cities.find_one({"id": quote["city_id"]}, {"_id": 0})
+    
+    invoice_doc = {
+        "id": invoice_id,
+        "invoice_number": invoice_number,
+        "customer_id": quote["customer_id"],
+        "city_id": quote["city_id"],
+        "quote_id": quote_id,  # Link to original quote
+        "items": quote["items"],
+        "subtotal": quote["subtotal"],
+        "tax": quote.get("tax", 0),
+        "total": quote["total"],
+        "amount_paid": 0.0,
+        "balance_due": quote["total"],
+        "status": "pending",
+        "notes": quote.get("notes"),
+        "due_date": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.invoices.insert_one(invoice_doc)
+    
+    # Update customer order count
+    await db.customers.update_one({"id": quote["customer_id"]}, {"$inc": {"total_orders": 1}})
+    
+    # Archive the quote (mark as converted)
+    await db.quotes.update_one(
+        {"id": quote_id}, 
+        {"$set": {
+            "status": "converted",
+            "converted_to_invoice_id": invoice_id,
+            "converted_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    response = {k: v for k, v in invoice_doc.items() if k != "_id"}
+    response["customer_name"] = customer["name"] if customer else None
+    response["customer_email"] = customer.get("email") if customer else None
+    response["city_name"] = city["name"] if city else None
+    return response
+
+@api_router.get("/quotes/customer/{customer_id}", response_model=List[QuoteResponse])
+async def get_customer_quotes(customer_id: str, include_converted: bool = True, current_user: dict = Depends(get_current_user)):
+    """Get all quotes for a customer, including converted ones"""
+    query = {"customer_id": customer_id}
+    if not include_converted:
+        query["status"] = {"$ne": "converted"}
+    
+    quotes = await db.quotes.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    cities = {c["id"]: c["name"] for c in await db.cities.find({}, {"_id": 0}).to_list(100)}
+    customer = await db.customers.find_one({"id": customer_id}, {"_id": 0})
+    
+    for q in quotes:
+        q["customer_name"] = customer["name"] if customer else None
+        q["city_name"] = cities.get(q.get("city_id"))
+    return quotes
+
 # ============== INVOICES ROUTES ==============
 async def get_next_invoice_number():
     counter = await db.counters.find_one_and_update(
