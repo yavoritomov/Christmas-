@@ -970,6 +970,192 @@ async def get_crew_schedule(current_user: dict = Depends(get_current_user)):
         inst["crews"] = [{"id": c, "name": crews[c]["name"], "color": crews[c]["color"]} for c in inst.get("crew_ids", []) if c in crews]
     return installations
 
+# ============== GPS TRACKING ROUTES ==============
+@api_router.post("/crew-portal/check-in/{installation_id}")
+async def crew_check_in(installation_id: str, location: LocationUpdate, current_user: dict = Depends(get_current_user)):
+    """Crew checks in at job site with GPS location"""
+    if current_user["role"] != "crew":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    crew = await db.crews.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not crew:
+        raise HTTPException(status_code=404, detail="Crew profile not found")
+    
+    installation = await db.installations.find_one({"id": installation_id}, {"_id": 0})
+    if not installation:
+        raise HTTPException(status_code=404, detail="Installation not found")
+    
+    if crew["id"] not in installation.get("crew_ids", []):
+        raise HTTPException(status_code=403, detail="Not assigned to this installation")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Update installation with check-in info
+    await db.installations.update_one(
+        {"id": installation_id},
+        {"$set": {
+            "status": "in_progress",
+            "check_in_time": now,
+            "check_in_location": {
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+                "accuracy": location.accuracy
+            }
+        }}
+    )
+    
+    # Update crew's current location
+    await db.crew_locations.update_one(
+        {"crew_id": crew["id"]},
+        {"$set": {
+            "crew_id": crew["id"],
+            "installation_id": installation_id,
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+            "accuracy": location.accuracy,
+            "timestamp": now,
+            "status": "checked_in"
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Checked in successfully", "check_in_time": now}
+
+@api_router.post("/crew-portal/check-out/{installation_id}")
+async def crew_check_out(installation_id: str, location: LocationUpdate, current_user: dict = Depends(get_current_user)):
+    """Crew checks out from job site with GPS location"""
+    if current_user["role"] != "crew":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    crew = await db.crews.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not crew:
+        raise HTTPException(status_code=404, detail="Crew profile not found")
+    
+    installation = await db.installations.find_one({"id": installation_id}, {"_id": 0})
+    if not installation:
+        raise HTTPException(status_code=404, detail="Installation not found")
+    
+    if crew["id"] not in installation.get("crew_ids", []):
+        raise HTTPException(status_code=403, detail="Not assigned to this installation")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Update installation with check-out info
+    await db.installations.update_one(
+        {"id": installation_id},
+        {"$set": {
+            "status": "completed",
+            "check_out_time": now,
+            "check_out_location": {
+                "latitude": location.latitude,
+                "longitude": location.longitude,
+                "accuracy": location.accuracy
+            }
+        }}
+    )
+    
+    # Update crew's status to idle
+    await db.crew_locations.update_one(
+        {"crew_id": crew["id"]},
+        {"$set": {
+            "installation_id": None,
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+            "accuracy": location.accuracy,
+            "timestamp": now,
+            "status": "idle"
+        }}
+    )
+    
+    return {"message": "Checked out successfully", "check_out_time": now}
+
+@api_router.post("/crew-portal/update-location")
+async def update_crew_location(location: LocationUpdate, current_user: dict = Depends(get_current_user)):
+    """Update crew's current GPS location (for live tracking)"""
+    if current_user["role"] != "crew":
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    crew = await db.crews.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not crew:
+        raise HTTPException(status_code=404, detail="Crew profile not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get current location record to preserve status
+    current = await db.crew_locations.find_one({"crew_id": crew["id"]}, {"_id": 0})
+    current_status = current.get("status", "idle") if current else "idle"
+    current_installation = current.get("installation_id") if current else None
+    
+    await db.crew_locations.update_one(
+        {"crew_id": crew["id"]},
+        {"$set": {
+            "crew_id": crew["id"],
+            "installation_id": current_installation,
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+            "accuracy": location.accuracy,
+            "timestamp": now,
+            "status": current_status
+        }},
+        upsert=True
+    )
+    
+    return {"message": "Location updated", "timestamp": now}
+
+@api_router.get("/tracking/crew-locations", response_model=List[CrewLocationResponse])
+async def get_all_crew_locations(city_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get all crew locations for admin tracking view"""
+    if current_user["role"] not in ["admin", "staff"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get crews filtered by city if specified
+    crew_query = {}
+    if city_id:
+        crew_query["city_id"] = city_id
+    
+    crews = {c["id"]: c for c in await db.crews.find(crew_query, {"_id": 0}).to_list(100)}
+    crew_ids = list(crews.keys())
+    
+    # Get locations for these crews
+    locations = await db.crew_locations.find(
+        {"crew_id": {"$in": crew_ids}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Get installation info for crews that are checked in
+    installation_ids = [loc.get("installation_id") for loc in locations if loc.get("installation_id")]
+    installations = {i["id"]: i for i in await db.installations.find(
+        {"id": {"$in": installation_ids}},
+        {"_id": 0}
+    ).to_list(100)}
+    
+    customers = {c["id"]: c for c in await db.customers.find({}, {"_id": 0}).to_list(1000)}
+    
+    result = []
+    for loc in locations:
+        crew = crews.get(loc["crew_id"])
+        if not crew:
+            continue
+        
+        installation = installations.get(loc.get("installation_id"))
+        customer = customers.get(installation.get("customer_id")) if installation else None
+        
+        result.append({
+            "crew_id": loc["crew_id"],
+            "crew_name": crew["name"],
+            "crew_color": crew["color"],
+            "installation_id": loc.get("installation_id"),
+            "customer_name": customer["name"] if customer else None,
+            "address": installation.get("address") if installation else None,
+            "latitude": loc["latitude"],
+            "longitude": loc["longitude"],
+            "accuracy": loc.get("accuracy"),
+            "timestamp": loc["timestamp"],
+            "status": loc["status"]
+        })
+    
+    return result
+
 # ============== PDF GENERATION ==============
 def generate_quote_pdf(quote: dict, customer: dict, company_name: str = "Festive Lights & Decorations"):
     buffer = BytesIO()
