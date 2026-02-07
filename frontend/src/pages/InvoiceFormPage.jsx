@@ -92,11 +92,33 @@ export default function InvoiceFormPage() {
     }
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/invoices`, formData, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success('Invoice created successfully');
-      navigate(`/invoices/${response.data.id}`);
+      if (id && isEditing) {
+        // Update existing invoice
+        await axios.put(`${API}/invoices/${id}`, formData, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success('Invoice updated successfully');
+        setIsEditing(false);
+        // Refresh invoice data
+        const [invRes, paymentsRes] = await Promise.all([
+          axios.get(`${API}/invoices/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API}/payments?invoice_id=${id}`, { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        setInvoice(invRes.data);
+        setPayments(paymentsRes.data);
+        setFormData({
+          customer_id: invRes.data.customer_id,
+          city_id: invRes.data.city_id,
+          items: invRes.data.items,
+          notes: invRes.data.notes || '',
+          due_date: invRes.data.due_date || ''
+        });
+      } else {
+        // Create new invoice
+        const response = await axios.post(`${API}/invoices`, formData, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success('Invoice created successfully');
+        navigate(`/invoices/${response.data.id}`);
+      }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create invoice');
+      toast.error(error.response?.data?.detail || 'Failed to save invoice');
     } finally {
       setLoading(false);
     }
