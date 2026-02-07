@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   mongodb:
-    image: mongo:6.0
+    image: mongo:7.0
+    platform: linux/amd64
     container_name: festive-mongodb
     restart: always
     volumes:
@@ -10,7 +11,7 @@ services:
     networks:
       - festive-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
