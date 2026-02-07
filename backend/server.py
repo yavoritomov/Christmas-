@@ -747,7 +747,7 @@ async def get_payments(invoice_id: Optional[str] = None, current_user: dict = De
 # ============== STRIPE PAYMENT ==============
 @api_router.post("/payments/stripe/create-session")
 async def create_stripe_session(invoice_id: str, origin_url: str, current_user: dict = Depends(get_current_user)):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+    import stripe
     
     invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
     if not invoice:
@@ -757,48 +757,59 @@ async def create_stripe_session(invoice_id: str, origin_url: str, current_user: 
     if not stripe_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
-    webhook_url = f"{origin_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+    stripe.api_key = stripe_key
     
     success_url = f"{origin_url}/invoices/{invoice_id}?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{origin_url}/invoices/{invoice_id}"
     
-    request = CheckoutSessionRequest(
-        amount=float(invoice["balance_due"]),
-        currency="usd",
+    # Create Stripe checkout session
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[{
+            "price_data": {
+                "currency": "usd",
+                "unit_amount": int(float(invoice["balance_due"]) * 100),  # Stripe uses cents
+                "product_data": {
+                    "name": f"Invoice {invoice['invoice_number']}",
+                },
+            },
+            "quantity": 1,
+        }],
+        mode="payment",
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={"invoice_id": invoice_id, "invoice_number": invoice["invoice_number"]}
     )
     
-    session = await stripe_checkout.create_checkout_session(request)
-    
     # Create pending transaction
     await db.payment_transactions.insert_one({
         "id": str(uuid.uuid4()),
         "invoice_id": invoice_id,
-        "session_id": session.session_id,
+        "session_id": session.id,
         "amount": invoice["balance_due"],
         "currency": "usd",
         "payment_status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat()
     })
     
-    return {"url": session.url, "session_id": session.session_id}
+    return {"url": session.url, "session_id": session.id}
 
 @api_router.get("/payments/stripe/status/{session_id}")
 async def get_stripe_status(session_id: str, current_user: dict = Depends(get_current_user)):
-    from emergentintegrations.payments.stripe.checkout import StripeCheckout
+    import stripe
     
     stripe_key = os.environ.get('STRIPE_API_KEY')
     if not stripe_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     
-    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url="")
-    status = await stripe_checkout.get_checkout_status(session_id)
+    stripe.api_key = stripe_key
+    
+    # Get session status from Stripe
+    session = stripe.checkout.Session.retrieve(session_id)
+    payment_status = "paid" if session.payment_status == "paid" else "pending"
     
     # Update transaction if paid
-    if status.payment_status == "paid":
+    if payment_status == "paid":
         transaction = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
         if transaction and transaction.get("payment_status") != "paid":
             await db.payment_transactions.update_one(
@@ -817,10 +828,10 @@ async def get_stripe_status(session_id: str, current_user: dict = Depends(get_cu
             )
     
     return {
-        "status": status.status,
-        "payment_status": status.payment_status,
-        "amount_total": status.amount_total,
-        "currency": status.currency
+        "status": session.status,
+        "payment_status": payment_status,
+        "amount_total": session.amount_total / 100 if session.amount_total else 0,
+        "currency": session.currency
     }
 
 @api_router.post("/webhook/stripe")
