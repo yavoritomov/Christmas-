@@ -181,6 +181,8 @@ export default function InvoiceFormPage() {
     overdue: 'bg-red-100 text-red-700'
   };
 
+  const canEdit = id && invoice?.status !== 'paid' && !isEditing;
+
   return (
     <div className="space-y-6 animate-fade-in" data-testid="invoice-form-page">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -201,10 +203,20 @@ export default function InvoiceFormPage() {
         </div>
         {invoice && (
           <div className="flex gap-2 flex-wrap">
+            {canEdit && (
+              <Button variant="outline" onClick={() => setIsEditing(true)} className="gap-2" data-testid="edit-invoice-btn">
+                <PencilSimple size={18} /> Edit Invoice
+              </Button>
+            )}
+            {isEditing && (
+              <Button variant="outline" onClick={() => setIsEditing(false)} className="gap-2">
+                Cancel
+              </Button>
+            )}
             <Button variant="outline" onClick={handleDownloadPdf} className="gap-2">
               <FilePdf size={18} /> PDF
             </Button>
-            {invoice.balance_due > 0 && (
+            {invoice.balance_due > 0 && !isEditing && (
               <>
                 <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
                   <DialogTrigger asChild>
@@ -247,7 +259,7 @@ export default function InvoiceFormPage() {
         )}
       </div>
 
-      {id ? (
+      {id && !isEditing ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 border-slate-100">
             <CardHeader>
