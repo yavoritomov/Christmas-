@@ -368,7 +368,7 @@ export default function InvoiceFormPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label>Customer *</Label>
-                    <Select value={formData.customer_id} onValueChange={v => setFormData(f => ({ ...f, customer_id: v }))}>
+                    <Select value={formData.customer_id} onValueChange={v => setFormData(f => ({ ...f, customer_id: v }))} disabled={!!id}>
                       <SelectTrigger data-testid="invoice-customer"><SelectValue placeholder="Select customer" /></SelectTrigger>
                       <SelectContent>
                         {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -377,7 +377,7 @@ export default function InvoiceFormPage() {
                   </div>
                   <div>
                     <Label>City *</Label>
-                    <Select value={formData.city_id} onValueChange={v => setFormData(f => ({ ...f, city_id: v }))}>
+                    <Select value={formData.city_id} onValueChange={v => setFormData(f => ({ ...f, city_id: v }))} disabled={!!id}>
                       <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
                       <SelectContent>
                         {cities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -399,8 +399,9 @@ export default function InvoiceFormPage() {
                 <CardContent className="pt-6 space-y-3">
                   <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
                   <div className="flex justify-between text-xl font-heading font-bold text-slate-900 pt-3 border-t"><span>Total</span><span>${total.toFixed(2)}</span></div>
-                  <Button type="submit" className="w-full rounded-full mt-4" disabled={loading} data-testid="save-invoice-btn">
-                    {loading ? 'Creating...' : 'Create Invoice'}
+                  <Button type="submit" className="w-full rounded-full mt-4 gap-2" disabled={loading} data-testid="save-invoice-btn">
+                    <FloppyDisk size={18} />
+                    {loading ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Invoice')}
                   </Button>
                 </CardContent>
               </Card>
