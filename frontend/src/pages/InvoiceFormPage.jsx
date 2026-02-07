@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { ArrowLeft, Plus, Trash, FilePdf, PaperPlaneTilt, CreditCard, Money, Check } from '@phosphor-icons/react';
+import { ArrowLeft, Plus, Trash, FilePdf, PaperPlaneTilt, CreditCard, Money, Check, FloppyDisk, PencilSimple } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export default function InvoiceFormPage() {
@@ -24,6 +24,7 @@ export default function InvoiceFormPage() {
   const [payments, setPayments] = useState([]);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState({ amount: 0, payment_method: 'cash', reference: '', notes: '' });
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     customer_id: searchParams.get('customer') || '',
     city_id: '',
