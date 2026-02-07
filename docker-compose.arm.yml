@@ -1,9 +1,11 @@
 version: '3.8'
 
+# Use this file for ARM-based Macs (M1/M2/M3)
+# Run with: docker compose -f docker-compose.arm.yml up --build
+
 services:
   mongodb:
     image: mongo:7.0
-    platform: linux/amd64
     container_name: festive-mongodb
     restart: always
     volumes:
