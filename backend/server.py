@@ -518,6 +518,40 @@ async def update_quote_status(quote_id: str, status: str, current_user: dict = D
         raise HTTPException(status_code=404, detail="Quote not found")
     return {"message": f"Quote status updated to {status}"}
 
+@api_router.put("/quotes/{quote_id}", response_model=QuoteResponse)
+async def update_quote(quote_id: str, quote: QuoteCreate, current_user: dict = Depends(get_current_user)):
+    """Update an existing quote - only allowed if not converted"""
+    existing_quote = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+    if not existing_quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    if existing_quote.get("status") == "converted":
+        raise HTTPException(status_code=400, detail="Cannot edit a converted quote")
+    
+    items = [item.model_dump() for item in quote.items]
+    subtotal = sum(item["quantity"] * item["unit_price"] for item in items)
+    tax = subtotal * 0.0
+    total = subtotal + tax
+    
+    update_data = {
+        "items": items,
+        "subtotal": subtotal,
+        "tax": tax,
+        "total": total,
+        "notes": quote.notes,
+        "valid_until": quote.valid_until,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.quotes.update_one({"id": quote_id}, {"$set": update_data})
+    
+    updated_quote = await db.quotes.find_one({"id": quote_id}, {"_id": 0})
+    customer = await db.customers.find_one({"id": updated_quote.get("customer_id")}, {"_id": 0})
+    city = await db.cities.find_one({"id": updated_quote.get("city_id")}, {"_id": 0})
+    updated_quote["customer_name"] = customer["name"] if customer else None
+    updated_quote["city_name"] = city["name"] if city else None
+    return updated_quote
+
 @api_router.delete("/quotes/{quote_id}")
 async def delete_quote(quote_id: str, current_user: dict = Depends(get_current_user)):
     result = await db.quotes.delete_one({"id": quote_id})
@@ -696,6 +730,48 @@ async def get_invoice(invoice_id: str, current_user: dict = Depends(get_current_
     invoice["customer_email"] = customer.get("email") if customer else None
     invoice["city_name"] = city["name"] if city else None
     return invoice
+
+@api_router.put("/invoices/{invoice_id}", response_model=InvoiceResponse)
+async def update_invoice(invoice_id: str, invoice: InvoiceCreate, current_user: dict = Depends(get_current_user)):
+    """Update an existing invoice - only allowed if not fully paid"""
+    existing_invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    if not existing_invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    if existing_invoice.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Cannot edit a fully paid invoice")
+    
+    items = [item.model_dump() for item in invoice.items]
+    subtotal = sum(item["quantity"] * item["unit_price"] for item in items)
+    tax = subtotal * 0.0
+    total = subtotal + tax
+    
+    # Recalculate balance due based on existing payments
+    amount_paid = existing_invoice.get("amount_paid", 0.0)
+    balance_due = total - amount_paid
+    new_status = "paid" if balance_due <= 0 else ("partial" if amount_paid > 0 else "pending")
+    
+    update_data = {
+        "items": items,
+        "subtotal": subtotal,
+        "tax": tax,
+        "total": total,
+        "balance_due": max(0, balance_due),
+        "status": new_status,
+        "notes": invoice.notes,
+        "due_date": invoice.due_date,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.invoices.update_one({"id": invoice_id}, {"$set": update_data})
+    
+    updated_invoice = await db.invoices.find_one({"id": invoice_id}, {"_id": 0})
+    customer = await db.customers.find_one({"id": updated_invoice.get("customer_id")}, {"_id": 0})
+    city = await db.cities.find_one({"id": updated_invoice.get("city_id")}, {"_id": 0})
+    updated_invoice["customer_name"] = customer["name"] if customer else None
+    updated_invoice["customer_email"] = customer.get("email") if customer else None
+    updated_invoice["city_name"] = city["name"] if city else None
+    return updated_invoice
 
 @api_router.delete("/invoices/{invoice_id}")
 async def delete_invoice(invoice_id: str, current_user: dict = Depends(get_current_user)):
