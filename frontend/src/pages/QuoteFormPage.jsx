@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, Plus, Trash, FilePdf, PaperPlaneTilt, Receipt, ArrowRight } from '@phosphor-icons/react';
+import { ArrowLeft, Plus, Trash, FilePdf, PaperPlaneTilt, Receipt, ArrowRight, FloppyDisk, PencilSimple } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export default function QuoteFormPage() {
@@ -28,6 +28,7 @@ export default function QuoteFormPage() {
   });
   const [quote, setQuote] = useState(null);
   const [converting, setConverting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
