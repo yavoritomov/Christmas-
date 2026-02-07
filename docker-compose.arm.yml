@@ -1,0 +1,60 @@
+version: '3.8'
+
+# Use this file for ARM-based Macs (M1/M2/M3)
+# Run with: docker compose -f docker-compose.arm.yml up --build
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: festive-mongodb
+    restart: always
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - festive-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: festive-backend
+    restart: always
+    ports:
+      - "8001:8001"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=festive_crm
+    env_file:
+      - ./backend/.env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - festive-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:8001}
+    container_name: festive-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - festive-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  festive-network:
+    driver: bridge
