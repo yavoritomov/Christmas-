@@ -86,11 +86,22 @@ export default function QuoteFormPage() {
     }
     setLoading(true);
     try {
-      const response = await axios.post(`${API}/quotes`, formData, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success('Quote created successfully');
-      navigate(`/quotes/${response.data.id}/edit`);
+      if (id) {
+        // Update existing quote
+        await axios.put(`${API}/quotes/${id}`, formData, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success('Quote updated successfully');
+        setIsEditing(false);
+        // Refresh quote data
+        const quoteRes = await axios.get(`${API}/quotes/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+        setQuote(quoteRes.data);
+      } else {
+        // Create new quote
+        const response = await axios.post(`${API}/quotes`, formData, { headers: { Authorization: `Bearer ${token}` } });
+        toast.success('Quote created successfully');
+        navigate(`/quotes/${response.data.id}/edit`);
+      }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create quote');
+      toast.error(error.response?.data?.detail || 'Failed to save quote');
     } finally {
       setLoading(false);
     }
