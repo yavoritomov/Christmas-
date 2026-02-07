@@ -286,32 +286,43 @@ export default function QuoteFormPage() {
                 <CardTitle className="font-heading">Details</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label>Customer *</Label>
-                  <Select value={formData.customer_id} onValueChange={v => setFormData(f => ({ ...f, customer_id: v }))} disabled={!!id}>
-                    <SelectTrigger data-testid="quote-customer"><SelectValue placeholder="Select customer" /></SelectTrigger>
-                    <SelectContent>
-                      {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>City *</Label>
-                  <Select value={formData.city_id} onValueChange={v => setFormData(f => ({ ...f, city_id: v }))} disabled={!!id}>
-                    <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
-                    <SelectContent>
-                      {cities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Valid Until</Label>
-                  <Input type="date" value={formData.valid_until} onChange={e => setFormData(f => ({ ...f, valid_until: e.target.value }))} />
-                </div>
-                <div>
-                  <Label>Notes</Label>
-                  <Textarea value={formData.notes} onChange={e => setFormData(f => ({ ...f, notes: e.target.value }))} rows={3} />
-                </div>
+                {(isEditing || !id) ? (
+                  <>
+                    <div>
+                      <Label>Customer *</Label>
+                      <Select value={formData.customer_id} onValueChange={v => setFormData(f => ({ ...f, customer_id: v }))} disabled={!!id}>
+                        <SelectTrigger data-testid="quote-customer"><SelectValue placeholder="Select customer" /></SelectTrigger>
+                        <SelectContent>
+                          {customers.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>City *</Label>
+                      <Select value={formData.city_id} onValueChange={v => setFormData(f => ({ ...f, city_id: v }))} disabled={!!id}>
+                        <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                        <SelectContent>
+                          {cities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Valid Until</Label>
+                      <Input type="date" value={formData.valid_until} onChange={e => setFormData(f => ({ ...f, valid_until: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Notes</Label>
+                      <Textarea value={formData.notes} onChange={e => setFormData(f => ({ ...f, notes: e.target.value }))} rows={3} />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between"><span className="text-slate-600">Customer</span><span className="font-medium">{quote?.customer_name}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-600">City</span><span>{quote?.city_name}</span></div>
+                    {quote?.valid_until && <div className="flex justify-between"><span className="text-slate-600">Valid Until</span><span>{quote?.valid_until}</span></div>}
+                    {quote?.notes && <div><span className="text-slate-600">Notes:</span><p className="mt-1 text-sm">{quote?.notes}</p></div>}
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -319,15 +330,16 @@ export default function QuoteFormPage() {
               <CardContent className="pt-6 space-y-3">
                 <div className="flex justify-between text-slate-600">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>${(isEditing || !id) ? subtotal.toFixed(2) : quote?.subtotal?.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xl font-heading font-bold text-slate-900 pt-3 border-t">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>${(isEditing || !id) ? total.toFixed(2) : quote?.total?.toFixed(2)}</span>
                 </div>
-                {!id && (
-                  <Button type="submit" className="w-full rounded-full mt-4" disabled={loading} data-testid="save-quote-btn">
-                    {loading ? 'Creating...' : 'Create Quote'}
+                {(isEditing || !id) && (
+                  <Button type="submit" className="w-full rounded-full mt-4 gap-2" disabled={loading} data-testid="save-quote-btn">
+                    <FloppyDisk size={18} />
+                    {loading ? 'Saving...' : (id ? 'Save Changes' : 'Create Quote')}
                   </Button>
                 )}
               </CardContent>
