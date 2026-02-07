@@ -154,6 +154,7 @@ export default function QuoteFormPage() {
   };
 
   const isConverted = quote?.status === 'converted';
+  const canEdit = id && !isConverted && !isEditing;
 
   return (
     <div className="space-y-6 animate-fade-in" data-testid="quote-form-page">
@@ -165,10 +166,39 @@ export default function QuoteFormPage() {
           <h1 className="text-2xl font-heading font-bold text-slate-900">
             {id ? `Quote ${quote?.quote_number || ''}` : 'New Quote'}
           </h1>
+          {quote && (
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              quote.status === 'converted' ? 'bg-slate-100 text-slate-600' :
+              quote.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' :
+              quote.status === 'rejected' ? 'bg-red-100 text-red-700' :
+              'bg-blue-100 text-blue-700'
+            }`}>
+              {quote.status}
+            </span>
+          )}
         </div>
         {quote && (
           <div className="flex gap-2">
-            {!isConverted && (
+            {canEdit && (
+              <Button 
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                className="gap-2"
+                data-testid="edit-quote-btn"
+              >
+                <PencilSimple size={18} /> Edit Quote
+              </Button>
+            )}
+            {isEditing && (
+              <Button 
+                onClick={() => setIsEditing(false)}
+                variant="outline"
+                className="gap-2"
+              >
+                Cancel
+              </Button>
+            )}
+            {!isConverted && !isEditing && (
               <Button 
                 onClick={handleConvertToInvoice} 
                 disabled={converting}
@@ -204,33 +234,49 @@ export default function QuoteFormPage() {
               <CardTitle className="font-heading">Line Items</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {formData.items.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 gap-3 items-end p-4 bg-slate-50 rounded-lg">
-                  <div className="col-span-12 md:col-span-5">
-                    <Label>Description</Label>
-                    <Input value={item.description} onChange={e => updateItem(index, 'description', e.target.value)} placeholder="Service or product" required />
-                  </div>
-                  <div className="col-span-4 md:col-span-2">
-                    <Label>Qty</Label>
-                    <Input type="number" min="1" value={item.quantity} onChange={e => updateItem(index, 'quantity', e.target.value)} />
-                  </div>
-                  <div className="col-span-6 md:col-span-3">
-                    <Label>Unit Price</Label>
-                    <Input type="number" min="0" step="0.01" value={item.unit_price} onChange={e => updateItem(index, 'unit_price', e.target.value)} />
-                  </div>
-                  <div className="col-span-2 md:col-span-2 flex items-center justify-between">
-                    <span className="font-semibold">${(item.quantity * item.unit_price).toFixed(2)}</span>
-                    {formData.items.length > 1 && (
-                      <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
-                        <Trash size={16} className="text-destructive" />
-                      </Button>
-                    )}
-                  </div>
+              {(isEditing || !id) ? (
+                <>
+                  {formData.items.map((item, index) => (
+                    <div key={index} className="grid grid-cols-12 gap-3 items-end p-4 bg-slate-50 rounded-lg">
+                      <div className="col-span-12 md:col-span-5">
+                        <Label>Description</Label>
+                        <Input value={item.description} onChange={e => updateItem(index, 'description', e.target.value)} placeholder="Service or product" required />
+                      </div>
+                      <div className="col-span-4 md:col-span-2">
+                        <Label>Qty</Label>
+                        <Input type="number" min="1" value={item.quantity} onChange={e => updateItem(index, 'quantity', e.target.value)} />
+                      </div>
+                      <div className="col-span-6 md:col-span-3">
+                        <Label>Unit Price</Label>
+                        <Input type="number" min="0" step="0.01" value={item.unit_price} onChange={e => updateItem(index, 'unit_price', e.target.value)} />
+                      </div>
+                      <div className="col-span-2 md:col-span-2 flex items-center justify-between">
+                        <span className="font-semibold">${(item.quantity * item.unit_price).toFixed(2)}</span>
+                        {formData.items.length > 1 && (
+                          <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(index)}>
+                            <Trash size={16} className="text-destructive" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" onClick={addItem} className="gap-2 w-full">
+                    <Plus size={18} /> Add Item
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  {quote?.items.map((item, i) => (
+                    <div key={i} className="flex justify-between p-3 bg-slate-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{item.description}</p>
+                        <p className="text-sm text-slate-500">{item.quantity} × ${item.unit_price.toFixed(2)}</p>
+                      </div>
+                      <p className="font-semibold">${(item.quantity * item.unit_price).toFixed(2)}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <Button type="button" variant="outline" onClick={addItem} className="gap-2 w-full">
-                <Plus size={18} /> Add Item
-              </Button>
+              )}
             </CardContent>
           </Card>
 
