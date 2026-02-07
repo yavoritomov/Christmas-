@@ -1,91 +1,99 @@
 # Festive Lights CRM - Product Requirements Document
 
-## Original Problem Statement
-Build a CRM for small business dealing with installation and sales of Christmas lights and event decorations. The system needs to have record for each customer information and previous orders/installations. The complete sales cycle includes quote, installation and invoice to the customer. So the system needs to be able to generate quotes and invoices track payments. Also needs to be able to manage multiple crews for the installation scheduling. There should be a clear dashboard/page for all installations and crew assignments.
+## Overview
+A CRM for small businesses dealing with Christmas lights and event decoration installation and sales.
 
-## User Choices & Requirements
-- JWT email/password authentication
-- PDF quotes downloadable with email integration
-- WhatsApp/Viber integration (MOCKED - requires business API setup)
-- Cash/check payment tracking + Stripe integration
-- 10-20 crews with their own login to view work orders/schedules
-- Multi-city segregation
-- Light theme UI
-- GPS tracking for crews with map visualization
+## Core Requirements
+1. Record customer information and previous orders/installations
+2. Manage full sales cycle: quote → installation → invoice
+3. Generate quotes and invoices (PDF downloadable, email/WhatsApp/Viber sendable)
+4. Handle payments: cash/check + Stripe/Apple Pay integration
+5. Dedicated unpaid invoices page with bulk email feature
+6. Manage 10-20 installation crews and their schedules
+7. Crew member login for viewing work orders/schedules
+8. Multi-city support with data segregation
+9. Light theme UI
 
-## Architecture
-- **Backend:** FastAPI + MongoDB
-- **Frontend:** React + Tailwind CSS + Shadcn UI + Leaflet Maps
-- **Authentication:** JWT-based
-- **Payments:** Stripe integration (active)
-- **PDF Generation:** ReportLab
-- **Maps:** Leaflet + OpenStreetMap (free, no API key needed)
+## Tech Stack
+- **Frontend**: React, Tailwind CSS, Shadcn UI, Leaflet.js
+- **Backend**: FastAPI, Pydantic, Motor
+- **Database**: MongoDB
+- **Auth**: JWT (email/password)
+- **Deployment**: Docker, Docker Compose
 
-## Core Features Implemented (Date: 2026-01-29)
-1. ✅ User Authentication (admin, staff, crew roles)
-2. ✅ Multi-city management with filtering
-3. ✅ Customer Management (CRUD, WhatsApp/Viber fields)
-4. ✅ Quotes (create, PDF download, email send)
-5. ✅ Invoices (create, PDF download, payment tracking)
-6. ✅ Payment recording (cash, check, card, Stripe)
-7. ✅ Unpaid Invoices page with bulk email reminders
-8. ✅ Crew Management (with color-coded assignments)
-9. ✅ Installation Scheduling with Calendar view
-10. ✅ Crew Portal (separate mobile-friendly view)
-11. ✅ Dashboard with KPIs and charts
-12. ✅ GPS Tracking with browser geolocation
-13. ✅ Interactive Map View with crew & job markers
-14. ✅ Today's Schedule visualization on map
+## Completed Features (as of Feb 2026)
+- [x] User authentication (admin, staff, crew roles)
+- [x] Multi-city management
+- [x] Customer CRUD with contact info
+- [x] Quote management (create, view, delete, status updates)
+- [x] Invoice management (create, view, delete)
+- [x] Convert Quote to Invoice workflow
+- [x] Payment recording (cash, check, card)
+- [x] Crew management
+- [x] Installation scheduling
+- [x] GPS crew tracking with Leaflet.js map
+- [x] **Edit Quotes** - Add/remove items, update notes (locked if converted)
+- [x] **Edit Invoices** - Add/remove items, update notes (locked if paid)
+- [x] Removed Emergent branding
 
-## User Personas
-1. **Admin:** Full access to all features, manages cities, crews, settings
-2. **Staff:** Can manage customers, quotes, invoices, schedule installations
-3. **Crew:** Mobile access to their assigned work orders via Crew Portal
-
-## Database Collections
-- users, cities, customers, quotes, invoices, payments, payment_transactions, crews, installations, crew_locations, counters
+## In Progress / Pending
+- [ ] **P1**: Dynamic PDF generation (currently uses static sample)
+- [ ] **P1**: SendGrid email integration for sending quotes/invoices
+- [ ] **P1**: Email all unpaid customers feature
+- [ ] **P2**: Stripe payment integration (frontend flow)
+- [ ] **P2**: Backend refactoring (split server.py into routers)
+- [ ] **P3**: WhatsApp/Viber messaging integration
+- [ ] **P3**: Auto-geocode customer addresses
 
 ## API Endpoints
-- /api/auth/* (login, register, me)
-- /api/cities/* (CRUD)
-- /api/customers/* (CRUD)
-- /api/quotes/* (CRUD, PDF, email)
-- /api/invoices/* (CRUD, PDF, unpaid)
-- /api/payments/* (create, list, stripe)
-- /api/crews/* (CRUD)
-- /api/installations/* (CRUD, status)
-- /api/crew-portal/* (my-schedule, check-in, check-out, update-location)
-- /api/tracking/* (crew-locations, todays-schedule)
-- /api/dashboard/stats
-- /api/email/* (send quote, invoice, bulk)
-- /api/messaging/* (whatsapp, viber - mocked)
 
-## MOCKED Integrations
-- Email (SendGrid) - requires API key for production
-- WhatsApp Business API - requires business account setup
-- Viber Business API - requires business account setup
+### Authentication
+- POST /api/auth/register
+- POST /api/auth/login
+- GET /api/auth/me
 
-## Prioritized Backlog
-### P0 (Next)
-- None (MVP complete)
+### Cities
+- GET/POST /api/cities
+- GET/DELETE /api/cities/{id}
 
-### P1 (Important)
-- SendGrid email integration with actual API key
-- WhatsApp Business API integration
-- Quote editing after creation
-- Invoice editing
-- Geocoding for customer addresses (convert address to lat/lng)
+### Customers
+- GET/POST /api/customers
+- GET/PUT/DELETE /api/customers/{id}
 
-### P2 (Nice to have)
-- Customer import from CSV
-- Recurring installation scheduling
-- Report generation (monthly, yearly)
-- Crew availability management
-- Route optimization for daily jobs
+### Quotes
+- GET/POST /api/quotes
+- GET/PUT/DELETE /api/quotes/{id}
+- PUT /api/quotes/{id}/status
+- POST /api/quotes/{id}/convert-to-invoice
+- GET /api/quotes/{id}/pdf
 
-## Technical Documentation
-- `/app/README.md` - Quick start guide
-- `/app/DEPLOYMENT.md` - Deployment instructions (Linux & AWS)
-- `/app/DEVELOPMENT.md` - Developer guide with full technical details
+### Invoices
+- GET/POST /api/invoices
+- GET/PUT/DELETE /api/invoices/{id}
+- GET /api/invoices/unpaid
+- GET /api/invoices/{id}/pdf
 
-*Last updated: January 2026*
+### Payments
+- GET/POST /api/payments
+- POST /api/payments/stripe/create-session
+
+### Crews & Installations
+- GET/POST /api/crews
+- GET/PUT/DELETE /api/crews/{id}
+- GET/POST /api/installations
+- PUT /api/installations/{id}/status
+
+### Crew Tracking
+- POST /api/crew-locations
+- GET /api/crew-locations
+
+## Database Collections
+- users, customers, cities, quotes, invoices, payments, crews, installations, crew_locations, counters
+
+## Test Credentials
+- **Admin**: admin@festive.com / admin123
+
+## Docker Setup
+- Use `docker compose up --build` (standard)
+- Use `docker compose -f docker-compose.arm.yml up --build` for ARM Macs
+- Node 20+ required for frontend (updated in Dockerfile)
