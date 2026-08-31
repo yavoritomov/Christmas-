@@ -28,7 +28,7 @@ cd festive-lights-crm
 cp backend/.env.example backend/.env
 # Edit backend/.env with your settings
 
-# Start all services
+# Start all services/ In powershell with docker desktop started
 docker-compose up -d
 
 # Create admin user

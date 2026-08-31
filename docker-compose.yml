@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   mongodb:
-    image: mongo:6.0
+    image: mongo:7.0
     container_name: festive-mongodb
     restart: always
     volumes:
